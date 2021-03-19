@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 #include<sys/stat.h>
 #include"get_sub_dir.h"
 
@@ -29,17 +31,19 @@ static inline int has_file_extension(const char *fname, const char *ext)
 	}
 }
 
-size_t count_file_sizes(const char *maindir, size_t extcnt, const char *exts[])
+size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const exts[])
 {
+	size_t tot = 0;
 	size_t capa = 5, ocapa = 3;
 	size_t len = 0;
-	const char **stack = malloc(capa * sizeof(char*));
+	char **stack = malloc(capa * sizeof(char*));
 	int cnt = 0;
 	char **cont;
 	enum file_or_directory *fds;
 	char *maindircpy = malloc(strlen(maindir) + 1);
 	strcpy(maindircpy, maindir);
 	stack[len] = maindircpy;
+	++len;
 	char *curr;
 	while(len)
 	{
@@ -50,6 +54,8 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *exts[])
 		cfs____get_sub_dirs(curr, cont, fds);
 		for(int i = 0; i < cnt; ++i)
 		{
+			if(strcmp(cont[i], "..") == 0 || strcmp(cont[i], ".") == 0)
+				continue;
 			if(fds[i] == DIRECTORY)
 			{
 				if(len == capa)
@@ -63,13 +69,22 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *exts[])
 			}
 			else
 			{
+#ifdef _WIN32
+				WIN32_FIND_DATA dat;
+				FindFirstFileA(cont[i], &dat);
+#else
+				struct stat dat;
+				stat(cont[i], &dat);
+				free(cont[i]);
+				tot += dat.st_size;
+#endif
 			}
 		}
 		free(curr);
 		free(cont);
 		free(fds);
 	}
-	return 0;
+	return tot;
 }
 
 int main(int argl, char *argv[])

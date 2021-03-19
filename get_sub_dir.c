@@ -41,7 +41,7 @@ int cfs____case_insensitive_strcmp(const void *x, const void *y)
 int cfs____cnt_sub_dirs(const char *dir)
 {
 	// make the wildcard search
-	char search[300];
+	char search[5000];
 	strcpy(search, dir);
 #ifdef _WIN32
 	size_t len=strlen(dir);
@@ -72,7 +72,7 @@ int cfs____cnt_sub_dirs(const char *dir)
 void cfs____get_sub_dirs(const char *dir,char *names[],enum file_or_directory fd[])
 {
 	// make the wildcard search
-	char search[300];
+	char search[5000];
 	strcpy(search, dir);
 	size_t len=strlen(dir);
 #ifdef _WIN32
