@@ -54,8 +54,8 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 		cfs____get_sub_dirs(curr, cont, fds);
 		for(int i = 0; i < cnt; ++i)
 		{
-			if(strcmp(cont[i], "..") == 0 || strcmp(cont[i], ".") == 0)
-				continue;
+			puts(cont[i]);
+			fflush(stdout);
 			if(fds[i] == DIRECTORY)
 			{
 				if(len == capa)

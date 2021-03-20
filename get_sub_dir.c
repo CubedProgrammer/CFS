@@ -59,12 +59,19 @@ int cfs____cnt_sub_dirs(const char *dir)
 
 	// keep looking while it can find more
 	do
-		++cnt
+	{
 #ifdef _WIN32
-		;
+#else
+		if(strcmp(".", de->d_name) && strcmp("..", de->d_name))
+#endif
+			++cnt;
+#ifndef _WIN32
+		de = readdir(dr);
+#endif
+	}
+#ifdef _WIN32
 	while(FindNextFileA(ff, &wff));
 #else
-		, de = readdir(dr);
 	while(de);
 #endif
 	return cnt;
@@ -92,6 +99,11 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum file_or_directory fd
 	// keep looking while it can find more
 	do
 	{
+#ifdef _WIN32
+#else
+		if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
+#endif
+			continue;
 #ifdef _WIN32
 		fnlen = strlen(wff.cFileName);
 #else
