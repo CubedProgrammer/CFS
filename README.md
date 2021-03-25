@@ -1,4 +1,4 @@
 # CFS
 Count file sizes
 
-STILL WORKING IN PROGRESS, DO NOT TRY TO RUN THIS YET!!
+Works, no support for file extensions yet.

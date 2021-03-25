@@ -103,7 +103,10 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum file_or_directory fd
 #else
 		if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
 #endif
+		{
+			de = readdir(dr);
 			continue;
+		}
 #ifdef _WIN32
 		fnlen = strlen(wff.cFileName);
 #else
