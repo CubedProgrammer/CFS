@@ -45,6 +45,7 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 	stack[len] = maindircpy;
 	++len;
 	char *curr;
+	int valid;
 	while(len)
 	{
 		curr = stack[--len];
@@ -67,6 +68,17 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 			}
 			else
 			{
+				valid = extcnt == 0 ? 1 : 0;
+				for(size_t j = 0; j < extcnt; ++j)
+				{
+					if(has_file_extension(cont[i], exts[j]))
+					{
+						valid = 1;
+						j = 999;
+					}
+				}
+				if(valid == 0)
+					continue;
 #ifdef _WIN32
 				WIN32_FIND_DATA dat;
 				FindFirstFileA(cont[i], &dat);
@@ -90,6 +102,6 @@ int main(int argl, char *argv[])
 	if(argl == 1)
 		puts("Put the directory to count, and then all the extensions to count.");
 	else
-		printf("All files in %s are %lu combined.\n", argv[1], count_file_sizes(argv[1], argl - 2, argv + 2));
+		printf("All files in %s are %lu bytes combined.\n", argv[1], count_file_sizes(argv[1], argl - 2, argv + 2));
 	return 0;
 }
