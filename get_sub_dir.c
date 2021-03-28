@@ -7,7 +7,7 @@
 #include<string.h>
 #include"get_sub_dir.h"
 
-void cfs____sort_dir_entries(size_t sz, char *fnames[], enum file_or_directory fd[])
+void cfs____sort_dir_entries(size_t sz, char *fnames[], enum cfs____file_or_directory fd[])
 {
 	size_t lstk[100], rstk[100];
 	size_t ssz = 0;
@@ -76,7 +76,7 @@ int cfs____cnt_sub_dirs(const char *dir)
 #endif
 	return cnt;
 }
-void cfs____get_sub_dirs(const char *dir,char *names[],enum file_or_directory fd[])
+void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_directory fd[])
 {
 	// make the wildcard search
 	char search[5000];

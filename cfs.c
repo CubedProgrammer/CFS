@@ -4,17 +4,7 @@
 #include<sys/stat.h>
 #include"get_sub_dir.h"
 
-size_t single_file_size(const char *name)
-{
-#ifdef _WIN32
-#else
-	struct stat dat;
-	stat(name, &dat);
-	return dat.st_size;
-#endif
-}
-
-static inline int has_file_extension(const char *fname, const char *ext)
+static inline int cfs____has_file_extension(const char *fname, const char *ext)
 {
 	if(ext == NULL)
 		return 1;
@@ -39,7 +29,7 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 	char **stack = malloc(capa * sizeof(char*));
 	int cnt = 0;
 	char **cont;
-	enum file_or_directory *fds;
+	enum cfs____file_or_directory *fds;
 	char *maindircpy = malloc(strlen(maindir) + 1);
 	strcpy(maindircpy, maindir);
 	stack[len] = maindircpy;
@@ -71,7 +61,7 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 				valid = extcnt == 0 ? 1 : 0;
 				for(size_t j = 0; j < extcnt; ++j)
 				{
-					if(has_file_extension(cont[i], exts[j]))
+					if(cfs____has_file_extension(cont[i], exts[j]))
 					{
 						valid = 1;
 						j = 999;
@@ -82,6 +72,9 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 #ifdef _WIN32
 				WIN32_FIND_DATA dat;
 				FindFirstFileA(cont[i], &dat);
+				ULONGLONG sz = dat.nFileSizeHigh;
+				sz = (sz << 32) + dat.nFileSizeLow;
+				tot += sz;
 #else
 				struct stat dat;
 				stat(cont[i], &dat);
