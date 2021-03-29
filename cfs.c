@@ -1,7 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#ifdef _WIN32
+#include<windows.h>
+#else
 #include<sys/stat.h>
+#endif
 #include"get_sub_dir.h"
 
 static inline int cfs____has_file_extension(const char *fname, const char *ext)

@@ -61,6 +61,7 @@ int cfs____cnt_sub_dirs(const char *dir)
 	do
 	{
 #ifdef _WIN32
+		if(strcmp(".", wff.cFileName) && strcmp("..", wff.cFileName))
 #else
 		if(strcmp(".", de->d_name) && strcmp("..", de->d_name))
 #endif
@@ -100,11 +101,14 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_direc
 	do
 	{
 #ifdef _WIN32
+		if(strcmp(".", wff.cFileName) == 0 || strcmp("..", wff.cFileName) == 0)
 #else
 		if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
 #endif
 		{
+#ifndef _WIN32
 			de = readdir(dr);
+#endif
 			continue;
 		}
 #ifdef _WIN32
@@ -113,10 +117,11 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_direc
 		fnlen = strlen(de->d_name);
 #endif
 		names[cnt]=malloc(len + fnlen + 2 * sizeof(char));
-#ifdef _WIN32
-		strcpy(names[cnt], wff.cFileName);
-#else
 		strcpy(names[cnt], dir);
+#ifdef _WIN32
+		names[cnt][len] = '\\';
+		strcpy(names[cnt] + len + 1, wff.cFileName);
+#else
 		names[cnt][len] = '/';
 		strcpy(names[cnt] + len + 1, de->d_name);
 #endif
