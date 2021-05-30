@@ -3,21 +3,94 @@
 #else
 #include<dirent.h>
 #endif
+#include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 #include"get_sub_dir.h"
 
-void cfs____sort_dir_entries(size_t sz, char *fnames[], enum cfs____file_or_directory fd[])
+void cfs____sort_dir_entries(size_t sz, const char *fnames[], enum cfs____file_or_directory fd[])
 {
 	size_t lstk[100], rstk[100];
+	char sstk[100];
 	size_t ssz = 0;
 	lstk[ssz] = 0;
 	rstk[ssz] = sz - 1;
+	sstk[ssz] = 97;
+	++ssz;
+	size_t l, r;
+	size_t indx, indy, indz;
+	const char **auxn = malloc(sz * sizeof(const char*));
+	enum cfs____file_or_directory *auxt = malloc(sz * sizeof(enum cfs____file_or_directory));
+	char status;
+	while(ssz)
+	{
+		--ssz;
+		l = lstk[ssz];
+		r = rstk[ssz];
+		status = sstk[ssz];
+		if(l == r)
+			continue;
+		if(status == 97)
+		{
+			lstk[ssz] = l;
+			rstk[ssz] = r;
+			sstk[ssz] = 98;
+			++ssz;
+			lstk[ssz] = l;
+			rstk[ssz] = (l + r) >> 1;
+			sstk[ssz] = 97;
+			lstk[ssz + 1] = rstk[ssz] + 1;
+			rstk[ssz + 1] = r;
+			sstk[ssz + 1] = 97;
+			ssz += 2;
+		}
+		else
+		{
+			indx = l;
+			indy = (l + r) / 2 + 1;
+			indz = l;
+			while(indx <= (l + r) / 2 && indy <= r)
+			{
+				if(cfs____case_insensitive_strcmp(fnames[indx], fnames[indy]) < 0)
+				{
+					auxn[indz] = fnames[indx];
+					auxt[indz] = fd[indx];
+					++indx;
+				}
+				else
+				{
+					auxn[indz] = fnames[indy];
+					auxt[indz] = fd[indy];
+					++indy;
+				}
+				++indz;
+			}
+			if(indy <= r)
+			{
+				for(;indy <= r;indy++,indz++)
+				{
+					auxn[indz] = fnames[indy];
+					auxt[indz] = fd[indy];
+				}
+			}
+			else
+			{
+				for(;indz <= r;indx++,indz++)
+				{
+					auxn[indz] = fnames[indx];
+					auxt[indz] = fd[indx];
+				}
+			}
+			memcpy(fnames + l, auxn + l, (r - l + 1) * sizeof(const char *));
+			memcpy(fd + l, auxt + l, (r - l + 1) * sizeof(enum cfs____file_or_directory));
+		}
+	}
+	free(auxt);
+	free(auxn);
 }
 
-int cfs____case_insensitive_strcmp(const void *x, const void *y)
+int cfs____case_insensitive_strcmp(const char *xstr, const char *ystr)
 {
-	const char *xstr = *(const char *const*)x, *ystr = *(const char *const*)y;
 	size_t xlen = strlen(xstr), ylen = strlen(ystr);
 	size_t len = xlen < ylen ? xlen : ylen;
 	char u, v;
@@ -41,7 +114,7 @@ int cfs____case_insensitive_strcmp(const void *x, const void *y)
 int cfs____cnt_sub_dirs(const char *dir)
 {
 	// make the wildcard search
-	char search[5000];
+	char search[300];
 	strcpy(search, dir);
 #ifdef _WIN32
 	size_t len=strlen(dir);
@@ -61,29 +134,27 @@ int cfs____cnt_sub_dirs(const char *dir)
 	do
 	{
 #ifdef _WIN32
-		if(strcmp(".", wff.cFileName) && strcmp("..", wff.cFileName))
+		if(strcmp(wff.cFileName, ".") == 0 || strcmp(wff.cFileName, "..") == 0)
 #else
-		if(strcmp(".", de->d_name) && strcmp("..", de->d_name))
+		if(strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
 #endif
-			++cnt;
-#ifndef _WIN32
-		de = readdir(dr);
-#endif
+			continue;
+		++cnt;
 	}
 #ifdef _WIN32
 	while(FindNextFileA(ff, &wff));
 #else
-	while(de);
+	while(de = readdir(dr));
 #endif
 	return cnt;
 }
 void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_directory fd[])
 {
 	// make the wildcard search
-	char search[5000];
+	char search[300];
 	strcpy(search, dir);
-	size_t len=strlen(dir);
 #ifdef _WIN32
+	size_t len=strlen(dir);
 	strcpy(search + len, "\\*");
 #endif
 
@@ -101,29 +172,18 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_direc
 	do
 	{
 #ifdef _WIN32
-		if(strcmp(".", wff.cFileName) == 0 || strcmp("..", wff.cFileName) == 0)
-#else
-		if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
-#endif
-		{
-#ifndef _WIN32
-			de = readdir(dr);
-#endif
-			continue;
-		}
-#ifdef _WIN32
 		fnlen = strlen(wff.cFileName);
+		if(strcmp(wff.cFileName, ".") == 0 || strcmp(wff.cFileName, "..") == 0)
 #else
 		fnlen = strlen(de->d_name);
+		if(strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
 #endif
-		names[cnt]=malloc(len + fnlen + 2 * sizeof(char));
-		strcpy(names[cnt], dir);
+			continue;
+		names[cnt]=malloc(fnlen + sizeof(char));
 #ifdef _WIN32
-		names[cnt][len] = '\\';
-		strcpy(names[cnt] + len + 1, wff.cFileName);
+		strcpy(names[cnt], wff.cFileName);
 #else
-		names[cnt][len] = '/';
-		strcpy(names[cnt] + len + 1, de->d_name);
+		strcpy(names[cnt], de->d_name);
 #endif
 #ifdef _WIN32
 		if(wff.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -134,14 +194,12 @@ void cfs____get_sub_dirs(const char *dir,char *names[],enum cfs____file_or_direc
 		else
 			fd[cnt]=NFILE;
 		++cnt;
-#ifdef __linux__
-		de = readdir(dr);
-#endif
 	}
 #ifdef _WIN32
 	while(FindNextFileA(ff, &wff));
 #else
-	while(de);
-	// implement merge sort here to sort
+	while(de = readdir(dr));
+	if(cnt > 0)
+		cfs____sort_dir_entries(cnt, (const char **)names, fd);
 #endif
 }

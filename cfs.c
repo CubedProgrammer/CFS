@@ -57,7 +57,14 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 					stack = realloc(stack, sizeof(char*) * capa);
 					ocapa = len;
 				}
-				stack[len] = cont[i];
+				stack[len] = malloc(strlen(curr) + strlen(cont[i]) + 2);
+				strcpy(stack[len], curr);
+#ifndef _WIN32
+				stack[len][strlen(curr)] = '/';
+#else
+				stack[len][strlen(curr)] = '\\';
+#endif
+				strcpy(stack[len] + strlen(curr) + 1, cont[i]);
 				++len;
 			}
 			else
@@ -82,10 +89,10 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 #else
 				struct stat dat;
 				stat(cont[i], &dat);
-				free(cont[i]);
 				tot += dat.st_size;
 #endif
 			}
+			free(cont[i]);
 		}
 		free(curr);
 		free(cont);
