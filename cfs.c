@@ -38,7 +38,7 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 	strcpy(maindircpy, maindir);
 	stack[len] = maindircpy;
 	++len;
-	char *curr;
+	char *curr, *tmp;
 	int valid;
 	while(len)
 	{
@@ -80,6 +80,14 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 				}
 				if(valid == 0)
 					continue;
+				tmp = malloc(strlen(curr) + strlen(cont[i]) + 2);
+				strcpy(tmp, curr);
+#ifndef _WIN32
+				tmp[strlen(curr)] = '/';
+#else
+				tmp[strlen(curr)] = '\\';
+#endif
+				strcpy(tmp + strlen(curr) + 1, cont[i]);
 #ifdef _WIN32
 				WIN32_FIND_DATA dat;
 				FindFirstFileA(cont[i], &dat);
@@ -88,9 +96,10 @@ size_t count_file_sizes(const char *maindir, size_t extcnt, const char *const ex
 				tot += sz;
 #else
 				struct stat dat;
-				stat(cont[i], &dat);
+				stat(tmp, &dat);
 				tot += dat.st_size;
 #endif
+				free(tmp);
 			}
 			free(cont[i]);
 		}
